@@ -1,9 +1,11 @@
-import { useState, useEffect} from "react";
+import { useState, useEffect } from "react";
+import API from './api';
+import AuthPage from './Authpage';
 
 // ─── PALETTE & CONSTANTS ────────────────────────────────────────────────────
 const WHATSAPP_NUMBER = "2347034673942"; // ← replace with real number
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=Hello%20GAM%20MUIZ%20CONCEPTS%2C%20I%20need%20assistance.`;
-
+// const API = "http://localhost:5000/api";
 const SERVICES = {
   olevel: {
     label: "O'Level Services",
@@ -210,8 +212,16 @@ const Navbar = ({ page, setPage, user, onLogout }) => {
       <div style={{ maxWidth: 1180, margin: "0 auto", height: 62, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         {/* Logo */}
         <button onClick={() => setPage("home")} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 9, background: "linear-gradient(135deg,#16a34a,#15803d)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 900, fontSize: 16, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>G</div>
-          <span style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 800, fontSize: 17, color: "#111827", letterSpacing: "-.3px" }}>GAM MUIZ <span style={{ color: "#16a34a" }}>CONCEPTS</span></span>
+          <img 
+    src="/Gam logo.png" 
+    alt="GAM MUIZ CONCEPTS Logo" 
+    style={{ 
+      width: 40, 
+      height: 40, 
+      borderRadius: 9,
+      objectFit: "contain"
+    }} 
+  />
         </button>
         {/* Desktop links */}
         <div style={{ display: "flex", alignItems: "center", gap: 4 }} className="desktop-nav">
@@ -470,9 +480,9 @@ const ContactPage = () => (
     <p style={{ color: "#6b7280", margin: "0 0 32px", fontSize: 15 }}>We're here to help. Reach us through any of these channels.</p>
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 16, marginBottom: 32 }}>
       {[
-        { icon: "whatsapp", label: "WhatsApp", val: "+234 800 000 0000", href: WHATSAPP_URL, color: "#25d366", bg: "#f0fdf4" },
-        { icon: "phone", label: "Call / SMS", val: "+234 800 000 0000", href: "tel:+2348000000000", color: "#2563eb", bg: "#eff6ff" },
-        { icon: "mail", label: "Email", val: "info@gammuizconcepts.com", href: "mailto:info@gammuizconcepts.com", color: "#7c3aed", bg: "#faf5ff" },
+        { icon: "whatsapp", label: "WhatsApp", val: "+234 703 467 3942", href: WHATSAPP_URL, color: "#25d366", bg: "#f0fdf4" },
+        { icon: "phone", label: "Call / SMS", val: "+234 703 467 3942", href: "tel:+2348000000000", color: "#2563eb", bg: "#eff6ff" },
+        { icon: "mail", label: "Email", val: "gammuiz52@gmail.com", href: "mailto:gammuiz52@gmail.com", color: "#7c3aed", bg: "#faf5ff" },
       ].map(c => (
         <a key={c.label} href={c.href} target="_blank" rel="noreferrer"
           style={{ background: c.bg, borderRadius: 14, padding: "22px 20px", textDecoration: "none", border: `1.5px solid ${c.color}30`, display: "flex", alignItems: "center", gap: 14, transition: "box-shadow .15s" }}
@@ -506,58 +516,6 @@ const ContactPage = () => (
     </a>
   </div>
 );
-
-// ─── AUTH PAGES ──────────────────────────────────────────────────────────────
-const AuthPage = ({ mode, onAuth, setPage }) => {
-  const [tab, setTab] = useState(mode || "login");
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
-  const [err, setErr] = useState("");
-  const up = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
-  const submit = () => {
-    setErr("");
-    if (!form.email || !form.password) return setErr("Email and password are required.");
-    if (tab === "signup" && !form.name) return setErr("Please enter your name.");
-    // Simulate auth — admin if email contains "admin"
-    const user = { name: form.name || form.email.split("@")[0], email: form.email, role: form.email.includes("admin") ? "admin" : "user" };
-    onAuth(user);
-  };
-  const inp = { width: "100%", padding: "12px 14px", borderRadius: 10, border: "1.5px solid #e5e7eb", fontSize: 14, outline: "none", fontFamily: "inherit", boxSizing: "border-box" };
-  return (
-    <div style={{ minHeight: "70vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 20px" }}>
-      <div style={{ background: "#fff", borderRadius: 18, border: "1.5px solid #e5e7eb", padding: "32px 28px", width: "100%", maxWidth: 420, boxShadow: "0 8px 40px rgba(0,0,0,.08)" }}>
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <div style={{ width: 48, height: 48, borderRadius: 12, background: "linear-gradient(135deg,#16a34a,#15803d)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 900, fontSize: 22, fontFamily: "'Plus Jakarta Sans',sans-serif", margin: "0 auto 14px" }}>G</div>
-          <h1 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 22, fontWeight: 800, color: "#111827", margin: 0 }}>GAM MUIZ CONCEPTS</h1>
-        </div>
-        <div style={{ display: "flex", background: "#f3f4f6", borderRadius: 10, padding: 4, marginBottom: 22 }}>
-          {["login", "signup"].map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              style={{ flex: 1, background: tab === t ? "#fff" : "none", border: "none", borderRadius: 8, padding: "9px", fontWeight: 700, fontSize: 14, cursor: "pointer", color: tab === t ? "#111827" : "#6b7280", boxShadow: tab === t ? "0 1px 4px rgba(0,0,0,.1)" : "none", fontFamily: "inherit", transition: "all .15s" }}>
-              {t === "login" ? "Log In" : "Sign Up"}
-            </button>
-          ))}
-        </div>
-        {err && <div style={{ background: "#fef2f2", color: "#dc2626", borderRadius: 8, padding: "10px 14px", fontSize: 13, marginBottom: 14 }}>{err}</div>}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {tab === "signup" && <input style={inp} placeholder="Full Name" value={form.name} onChange={up("name")} />}
-          <input style={inp} placeholder="Email Address" type="email" value={form.email} onChange={up("email")} />
-          <input style={inp} placeholder="Password" type="password" value={form.password} onChange={up("password")} />
-          <button onClick={submit} style={{ background: "#16a34a", color: "#fff", border: "none", borderRadius: 10, padding: "13px", fontWeight: 700, fontSize: 15, cursor: "pointer", marginTop: 4 }}>
-            {tab === "login" ? "Log In" : "Create Account"}
-          </button>
-        </div>
-        <div style={{ textAlign: "center", marginTop: 18 }}>
-          <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#16a34a", textDecoration: "none", fontSize: 14, fontWeight: 600 }}>
-            <Icon name="whatsapp" size={16} /> Continue via WhatsApp
-          </a>
-        </div>
-        <p style={{ textAlign: "center", fontSize: 12, color: "#9ca3af", marginTop: 16 }}>
-          {tab === "login" ? "Use email: admin@example.com to test admin access" : "Create an account to track your service requests"}
-        </p>
-      </div>
-    </div>
-  );
-};
 
 // ─── USER DASHBOARD ──────────────────────────────────────────────────────────
 const UserDashboard = ({ user, requests, setPage }) => {
@@ -723,15 +681,15 @@ const Footer = ({ setPage }) => (
         <div>
           <div style={{ fontWeight: 700, color: "#fff", marginBottom: 12, fontSize: 14 }}>Contact</div>
           <div style={{ fontSize: 13, color: "#86efac", lineHeight: 1.8 }}>
-            <div>📱 +234 800 000 0000</div>
-            <div>📧 info@gammuizconcepts.com</div>
+            <div>📱 +234 703 467 3942</div>
+            <div>📧 gammuiz52@gmail.com</div>
             <div>⏰ Mon–Fri: 8AM – 6PM</div>
           </div>
         </div>
       </div>
       <div style={{ borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: 20, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 10, fontSize: 12, color: "#4ade80" }}>
         <span>© {new Date().getFullYear()} GAM MUIZ CONCEPTS. All rights reserved.</span>
-        <span>Made with ❤️ for Nigeria</span>
+        <span>Made by I❤️B❤️K for Nigeria</span>
       </div>
     </div>
   </footer>
@@ -768,23 +726,68 @@ const SEED_REQUESTS = [
   { name: "Fatima Yusuf", phone: "08087654321", email: "user@example.com", service: "JAMB Result Printing", serviceId: "jb2", category: "jamb", status: "In Progress", details: "UTME 2024", date: new Date(Date.now() - 864e5).toISOString(), userEmail: "user@example.com" },
   { name: "Emeka Obi", phone: "07011223344", email: "emeka@example.com", service: "Post-UTME Form Filling", serviceId: "ot1", category: "other", status: "Pending", details: "UNIZIK", date: new Date().toISOString(), userEmail: "emeka@example.com" },
 ];
-
 // ─── APP ROOT ────────────────────────────────────────────────────────────────
 export default function App() {
   const [page, setPage] = useState("home");
   const [user, setUser] = useState(null);
   const [requests, setRequests] = useState(SEED_REQUESTS);
   const [modal, setModal] = useState(null); // selected service
+  // Load requests from backend on startup
+useEffect(() => {
+  const loadRequests = async () => {
+    try {
+      const res = await API.get('/requests');
+      setRequests(res.data);
+    } catch (err) {
+      console.log('Using local data');
+    }
+  };
+  loadRequests();
+}, []);
+
+// Load saved user from localStorage
+useEffect(() => {
+  const savedUser = localStorage.getItem('user');
+  if (savedUser) {
+    setUser(JSON.parse(savedUser));
+  }
+}, []);
 
   const handleRequest = (service) => setModal(service);
-  const handleSubmitRequest = (data) => {
-    setRequests(r => [{ ...data, userEmail: user?.email || "guest", category: data.serviceId?.slice(0, 2) === "ol" ? "olevel" : data.serviceId?.slice(0, 2) === "jb" ? "jamb" : data.serviceId?.slice(0, 2) === "al" ? "alevel" : data.serviceId?.slice(0, 2) === "st" ? "state" : "other" }, ...r]);
+  const handleSubmitRequest = async (data) => {
+    try {
+      const payload = {
+        ...data,
+        userEmail: user?.email || "guest",
+        category: data.serviceId?.slice(0, 2) === "ol" ? "olevel" 
+          : data.serviceId?.slice(0, 2) === "jb" ? "jamb"
+          : data.serviceId?.slice(0, 2) === "al" ? "alevel"
+          : data.serviceId?.slice(0, 2) === "st" ? "state" : "other"
+      };
+      const res = await API.post('/requests', payload);
+      setRequests(r => [res.data.request, ...r]);
+    } catch (err) {
+      console.error("Request error:", err);
+      alert("Failed to submit request. Please try again.");
+    }
   };
-  const handleUpdateStatus = (idx, status) => {
-    setRequests(r => r.map((req, i) => i === idx ? { ...req, status } : req));
+  const handleUpdateStatus = async (idx, status) => {
+    try {
+      const request = requests[idx];
+      await API.put(`/requests/${request._id}`, { status });
+      setRequests(r => r.map((req, i) => i === idx ? { ...req, status } : req));
+    } catch (err) {
+      console.error("Update error:", err);
+      alert("Failed to update status.");
+    }
   };
   const handleAuth = (u) => { setUser(u); setPage(u.role === "admin" ? "admin" : "dashboard"); };
-  const handleLogout = () => { setUser(null); setPage("home"); };
+  const handleLogout = () => {
+  setUser(null);
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  setPage("home");
+};
 
   const renderPage = () => {
     switch (page) {
