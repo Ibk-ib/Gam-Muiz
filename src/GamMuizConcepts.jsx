@@ -6,6 +6,15 @@ import AuthPage from './Authpage';
 const WHATSAPP_NUMBER = "2347034673942"; // ← replace with real number
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=Hello%20GAM%20MUIZ%20CONCEPTS%2C%20I%20need%20assistance.`;
 // const API = "http://localhost:5000/api";
+const getCategoryFromId = (id) => {
+  if (!id) return "other";
+  const prefix = id.slice(0, 2);
+  if (prefix === "ol") return "olevel";
+  if (prefix === "st") return "state";
+  if (prefix === "jb") return "jamb";
+  if (prefix === "al") return "alevel";
+  return "other";
+};
 const SERVICES = {
   olevel: {
     label: "O'Level Services",
@@ -100,7 +109,9 @@ const Icon = ({ name, size = 20 }) => {
     home: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
     grid: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
     bell: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>,
+    trash: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>,
   };
+
   return icons[name] || null;
 };
 
@@ -191,10 +202,10 @@ const RequestModal = ({ service, onClose, onSubmit }) => {
               <button onClick={submit} style={{ background: "#16a34a", color: "#fff", border: "none", borderRadius: 10, padding: "13px", fontWeight: 700, fontSize: 15, cursor: "pointer", marginTop: 4 }}>
                 Submit Request
               </button>
-              <a href={WHATSAPP_URL} target="_blank" rel="noreferrer"
+              {/* <a href={WHATSAPP_URL} target="_blank" rel="noreferrer"
                 style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#25d366", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontWeight: 600, fontSize: 14, textDecoration: "none" }}>
                 <Icon name="whatsapp" size={18} /> Chat on WhatsApp Instead
-              </a>
+              </a> */}
             </div>
           </>
         )}
@@ -216,8 +227,8 @@ const Navbar = ({ page, setPage, user, onLogout }) => {
     src="/Gam logo.png" 
     alt="GAM MUIZ CONCEPTS Logo" 
     style={{ 
-      width: 40, 
-      height: 40, 
+      width: 90, 
+      height: 50, 
       borderRadius: 9,
       objectFit: "contain"
     }} 
@@ -519,7 +530,9 @@ const ContactPage = () => (
 
 // ─── USER DASHBOARD ──────────────────────────────────────────────────────────
 const UserDashboard = ({ user, requests, setPage }) => {
-  const myReqs = requests.filter(r => r.userEmail === user.email);
+  const myReqs = requests.filter((r) => 
+  r.userEmail?.toLowerCase() === user.email?.toLowerCase()
+);
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", padding: "32px 20px 60px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28, flexWrap: "wrap", gap: 12 }}>
@@ -555,7 +568,11 @@ const UserDashboard = ({ user, requests, setPage }) => {
             <div key={i} style={{ background: "#fff", borderRadius: 14, padding: "18px 20px", border: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
               <div>
                 <div style={{ fontWeight: 700, color: "#111827", fontSize: 15, marginBottom: 4 }}>{r.service}</div>
-                <div style={{ fontSize: 13, color: "#6b7280" }}>{new Date(r.date).toLocaleDateString("en-NG", { dateStyle: "medium" })}</div>
+                <div style={{ fontSize: 13, color: "#6b7280" }}>
+                  {r.createdAt || r.date 
+                    ? new Date(r.createdAt || r.date).toLocaleDateString("en-NG", { dateStyle: "medium" })
+                    : "Date unavailable"}
+                </div>
                 {r.details && <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 4 }}>{r.details.slice(0, 60)}{r.details.length > 60 ? "…" : ""}</div>}
               </div>
               <Badge status={r.status} />
@@ -568,7 +585,7 @@ const UserDashboard = ({ user, requests, setPage }) => {
 };
 
 // ─── ADMIN DASHBOARD ─────────────────────────────────────────────────────────
-const AdminDashboard = ({ requests, onUpdateStatus }) => {
+const AdminDashboard = ({ requests, onUpdateStatus, onDelete }) => {
   const [filter, setFilter] = useState("All");
   const [catFilter, setCatFilter] = useState("all");
   const statuses = ["All", "Pending", "In Progress", "Completed"];
@@ -624,24 +641,42 @@ const AdminDashboard = ({ requests, onUpdateStatus }) => {
                   <div style={{ fontWeight: 700, color: "#111827", fontSize: 15 }}>{r.service}</div>
                   <div style={{ fontSize: 13, color: "#6b7280", marginTop: 2 }}>{r.name} · {r.phone} {r.email ? "· " + r.email : ""}</div>
                   {r.details && <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 4 }}>{r.details}</div>}
-                  <div style={{ fontSize: 12, color: "#d1d5db", marginTop: 4 }}>{new Date(r.date).toLocaleString("en-NG")}</div>
+                  <div style={{ fontSize: 12, color: "#d1d5db", marginTop: 4 }}>
+                    {r.createdAt || r.date
+                      ? new Date(r.createdAt || r.date).toLocaleString("en-NG")
+                      : "Date unavailable"}
+                  </div>
                 </div>
                 <Badge status={r.status} />
               </div>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {["Pending", "In Progress", "Completed"].map(s => (
-                  <button key={s} onClick={() => onUpdateStatus(i, s)}
-                    disabled={r.status === s}
-                    style={{ background: r.status === s ? "#f3f4f6" : "#fff", color: r.status === s ? "#9ca3af" : "#374151", border: "1.5px solid #e5e7eb", borderRadius: 7, padding: "5px 12px", fontSize: 12, fontWeight: 600, cursor: r.status === s ? "default" : "pointer", fontFamily: "inherit" }}>
-                    {s}
-                  </button>
-                ))}
-                <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hello%20${encodeURIComponent(r.name)}%2C%20regarding%20your%20request%20for%20${encodeURIComponent(r.service)}`}
-                  target="_blank" rel="noreferrer"
-                  style={{ background: "#25d366", color: "#fff", border: "none", borderRadius: 7, padding: "5px 12px", fontSize: 12, fontWeight: 600, textDecoration: "none", display: "flex", alignItems: "center", gap: 5 }}>
-                  <Icon name="whatsapp" size={13} /> Reply
-                </a>
-              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+  {["Pending", "In Progress", "Completed"].map((s) => (
+    <button
+      key={s}
+      onClick={() => onUpdateStatus(i, s)}
+      disabled={r.status === s}
+      style={{ background: r.status === s ? "#f3f4f6" : "#fff", color: r.status === s ? "#9ca3af" : "#374151", border: "1.5px solid #e5e7eb", borderRadius: 7, padding: "5px 12px", fontSize: 12, fontWeight: 600, cursor: r.status === s ? "default" : "pointer", fontFamily: "inherit" }}
+    >
+      {s}
+    </button>
+  ))}
+    <a 
+    href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hello%20${encodeURIComponent(r.name)}%2C%20regarding%20your%20${encodeURIComponent(r.service)}%20request.`}
+    target="_blank"
+    rel="noreferrer"
+    style={{ background: "#25d366", color: "#fff", border: "none", borderRadius: 7, padding: "5px 12px", fontSize: 12, fontWeight: 600, textDecoration: "none", display: "flex", alignItems: "center", gap: 5 }}
+  >
+    <Icon name="whatsapp" size={13} /> Reply
+  </a>
+  <button
+    onClick={() => onDelete(i)}
+    style={{ background: "#fef2f2", color: "#dc2626", border: "1.5px solid #fecaca", borderRadius: 7, padding: "5px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontFamily: "inherit" }}
+    onMouseEnter={(e) => e.currentTarget.style.background = "#fee2e2"}
+    onMouseLeave={(e) => e.currentTarget.style.background = "#fef2f2"}
+  >
+    <Icon name="trash" size={13} /> Delete
+  </button>
+</div>
             </div>
           ))}
         </div>
@@ -689,7 +724,7 @@ const Footer = ({ setPage }) => (
       </div>
       <div style={{ borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: 20, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 10, fontSize: 12, color: "#4ade80" }}>
         <span>© {new Date().getFullYear()} GAM MUIZ CONCEPTS. All rights reserved.</span>
-        <span>Made by I❤️B❤️K for Nigeria</span>
+        <span>Made by I❤️B❤️K</span>
       </div>
     </div>
   </footer>
@@ -721,56 +756,136 @@ const GlobalStyles = () => {
 };
 
 // ─── DEMO SEED DATA ──────────────────────────────────────────────────────────
-const SEED_REQUESTS = [
-  { name: "Aminu Ibrahim", phone: "08012345678", email: "admin@example.com", service: "WAEC Scratch Card / Result Checker", serviceId: "ol1", category: "olevel", status: "Completed", details: "Need for 2023 results", date: new Date(Date.now() - 864e5 * 3).toISOString(), userEmail: "admin@example.com" },
-  { name: "Fatima Yusuf", phone: "08087654321", email: "user@example.com", service: "JAMB Result Printing", serviceId: "jb2", category: "jamb", status: "In Progress", details: "UTME 2024", date: new Date(Date.now() - 864e5).toISOString(), userEmail: "user@example.com" },
-  { name: "Emeka Obi", phone: "07011223344", email: "emeka@example.com", service: "Post-UTME Form Filling", serviceId: "ot1", category: "other", status: "Pending", details: "UNIZIK", date: new Date().toISOString(), userEmail: "emeka@example.com" },
-];
+// const SEED_REQUESTS = [
+//   { name: "Aminu Ibrahim", phone: "08012345678", email: "admin@example.com", service: "WAEC Scratch Card / Result Checker", serviceId: "ol1", category: "olevel", status: "Completed", details: "Need for 2023 results", date: new Date(Date.now() - 864e5 * 3).toISOString(), userEmail: "admin@example.com" },
+//   { name: "Fatima Yusuf", phone: "08087654321", email: "user@example.com", service: "JAMB Result Printing", serviceId: "jb2", category: "jamb", status: "In Progress", details: "UTME 2024", date: new Date(Date.now() - 864e5).toISOString(), userEmail: "user@example.com" },
+//   { name: "Emeka Obi", phone: "07011223344", email: "emeka@example.com", service: "Post-UTME Form Filling", serviceId: "ot1", category: "other", status: "Pending", details: "UNIZIK", date: new Date().toISOString(), userEmail: "emeka@example.com" },
+// ];
 // ─── APP ROOT ────────────────────────────────────────────────────────────────
 export default function App() {
   const [page, setPage] = useState("home");
   const [user, setUser] = useState(null);
-  const [requests, setRequests] = useState(SEED_REQUESTS);
+  const [requests, setRequests] = useState([]);
   const [modal, setModal] = useState(null); // selected service
   // Load requests from backend on startup
 useEffect(() => {
   const loadRequests = async () => {
     try {
-      const res = await API.get('/requests');
-      setRequests(res.data);
+      const savedUser = localStorage.getItem("user");
+      if (!savedUser) return;
+
+      const currentUser = JSON.parse(savedUser);
+
+      if (currentUser.role === "admin") {
+        // Admin loads ALL requests
+        const res = await API.get("/requests");
+        setRequests(res.data);
+      } else {
+        // Regular user loads ONLY their own requests
+        const res = await API.get("/requests/mine");
+        setRequests(res.data);
+      }
     } catch (err) {
-      console.log('Using local data');
+      console.log("Could not load requests:", err.message);
+      setRequests([]);
     }
   };
+
   loadRequests();
-}, []);
+}, [user]); // ← re-runs whenever user changes
 
 // Load saved user from localStorage
+// Load user from localStorage on startup
 useEffect(() => {
-  const savedUser = localStorage.getItem('user');
+  const savedUser = localStorage.getItem("user");
   if (savedUser) {
     setUser(JSON.parse(savedUser));
   }
 }, []);
 
-  const handleRequest = (service) => setModal(service);
-  const handleSubmitRequest = async (data) => {
+// Load requests whenever user changes (login/logout)
+useEffect(() => {
+  const loadRequests = async () => {
     try {
-      const payload = {
-        ...data,
-        userEmail: user?.email || "guest",
-        category: data.serviceId?.slice(0, 2) === "ol" ? "olevel" 
-          : data.serviceId?.slice(0, 2) === "jb" ? "jamb"
-          : data.serviceId?.slice(0, 2) === "al" ? "alevel"
-          : data.serviceId?.slice(0, 2) === "st" ? "state" : "other"
-      };
-      const res = await API.post('/requests', payload);
-      setRequests(r => [res.data.request, ...r]);
+      const savedUser = localStorage.getItem("user");
+      if (!savedUser) {
+        setRequests([]);
+        return;
+      }
+
+      const currentUser = JSON.parse(savedUser);
+
+      if (currentUser.role === "admin") {
+        // Admin loads ALL requests
+        const res = await API.get("/requests");
+        setRequests(res.data);
+      } else {
+        // Regular user loads only their own
+        const res = await API.get("/requests/mine");
+        setRequests(res.data);
+      }
     } catch (err) {
-      console.error("Request error:", err);
-      alert("Failed to submit request. Please try again.");
+      console.log("Could not load requests:", err.message);
+      setRequests([]);
     }
   };
+
+  loadRequests();
+}, [user]); // ← re-runs every time user logs in or out
+
+  const handleRequest = (service) => {
+  if (!user) {
+    alert("Please log in to request a service.");
+    setPage("login");
+    return;
+  }
+  setModal(service);
+};
+  const handleSubmitRequest = async (data) => {
+  try {
+    // Make sure user is logged in before submitting
+    if (!user || !user.email) {
+      alert("Please log in to submit a request.");
+      setPage("login");
+      return;
+    }
+
+    const payload = {
+      ...data,
+      userEmail: user.email, // ← always use real email
+      category: getCategoryFromId(data.serviceId),
+    };
+
+    const res = await API.post("/requests", payload);
+
+    // Add new request to list
+    setRequests((r) => [res.data.request, ...r]);
+  } catch (err) {
+    console.error("Submit error:", err);
+    alert("Failed to submit request. Please try again.");
+  }
+};
+  
+const handleDeleteRequest = async (idx) => {
+  const request = requests[idx];
+
+  // Check if request has a valid ID
+  if (!request._id) {
+    alert("Cannot delete this request. Please refresh the page and try again.");
+    return;
+  }
+
+  const confirmed = window.confirm(`Delete request for "${request.service}"? This cannot be undone.`);
+  if (!confirmed) return;
+
+  try {
+    await API.delete(`/requests/${request._id}`);
+    setRequests((r) => r.filter((_, i) => i !== idx));
+  } catch (err) {
+    console.error("Delete error:", err.message);
+    alert("Failed to delete. Make sure backend is running.");
+  }
+};
   const handleUpdateStatus = async (idx, status) => {
     try {
       const request = requests[idx];
@@ -781,11 +896,20 @@ useEffect(() => {
       alert("Failed to update status.");
     }
   };
-  const handleAuth = (u) => { setUser(u); setPage(u.role === "admin" ? "admin" : "dashboard"); };
+  const handleAuth = (u) => {
+  setUser(u);
+  localStorage.setItem("user", JSON.stringify(u));
+  if (u.role === "admin") {
+    setPage("admin");
+  } else {
+    setPage("dashboard");
+  }
+};
   const handleLogout = () => {
   setUser(null);
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
+  setRequests([]); // ← clear requests on logout
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
   setPage("home");
 };
 
@@ -794,14 +918,14 @@ useEffect(() => {
       case "home": return <HomePage setPage={setPage} onRequest={handleRequest} />;
       case "services": return <ServicesPage onRequest={handleRequest} />;
       case "contact": return <ContactPage />;
-      case "login": return <AuthPage mode="login" onAuth={handleAuth} setPage={setPage} />;
-      case "signup": return <AuthPage mode="signup" onAuth={handleAuth} setPage={setPage} />;
+      case "login": return <AuthPage mode="login" onAuthSuccess={handleAuth} />;
+      case "signup": return <AuthPage mode="signup" onAuthSuccess={handleAuth} />;
       case "dashboard":
         if (!user) { setPage("login"); return null; }
         return <UserDashboard user={user} requests={requests} setPage={setPage} />;
       case "admin":
         if (!user || user.role !== "admin") { setPage("login"); return null; }
-        return <AdminDashboard requests={requests} onUpdateStatus={handleUpdateStatus} />;
+        return <AdminDashboard requests={requests} onUpdateStatus={handleUpdateStatus} onDelete={handleDeleteRequest} />;
       default: return <HomePage setPage={setPage} onRequest={handleRequest} />;
     }
   };

@@ -3,7 +3,7 @@ import axios from "axios";
 
 // ── API SETUP ─────────────────────────────────────────────────────────────────
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL:'http://127.0.0.1:5000/api'
 });
 
 // ── WHATSAPP ──────────────────────────────────────────────────────────────────
@@ -29,22 +29,14 @@ const styles = {
     boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
   },
   logoWrap: {
-    textAlign: "center",
-    marginBottom: 28,
-  },
-  logoCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 14,
-    background: "linear-gradient(135deg, #16a34a, #15803d)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: "#fff",
-    fontWeight: 900,
-    fontSize: 24,
-    margin: "0 auto 12px",
-  },
+  textAlign: "center",
+  marginBottom: 28,
+  width: "100%",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+},
   brandName: {
     fontSize: 18,
     fontWeight: 800,
@@ -271,11 +263,17 @@ export default function AuthPage({ onAuthSuccess }) {
       <div style={styles.card}>
 
         {/* LOGO */}
-        <div style={styles.logoWrap}>
-          <div style={styles.logoCircle}>G</div>
-          <p style={styles.brandName}>GAM MUIZ CONCEPTS</p>
-          <p style={styles.brandSub}>Educational Services Platform</p>
-        </div>
+    <div style={{ width: "100%", display: "flex", justifyContent: "center", marginBottom: 16 }}>
+  <img
+    src="/Gam logo.png"
+    alt="GAM MUIZ CONCEPTS Logo"
+    style={{
+      width: 120,
+      height: 80,
+      objectFit: "contain",
+    }}
+  />
+</div>
 
         {/* TABS */}
         <div style={styles.tabRow}>
@@ -356,11 +354,10 @@ export default function AuthPage({ onAuthSuccess }) {
         {/* DIVIDER */}
         <div style={styles.divider}>── or ──</div>
 
-        {/* WHATSAPP BUTTON */}
+        {/* WHATSAPP BUTTON
         <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" style={styles.waBtn}>
           <WAIcon /> Chat with us on WhatsApp
-        </a>
-
+        </a> */}
         {/* HINT */}
         <p style={styles.hint}>
           {tab === "login"
