@@ -588,99 +588,184 @@ const UserDashboard = ({ user, requests, setPage }) => {
 const AdminDashboard = ({ requests, onUpdateStatus, onDelete }) => {
   const [filter, setFilter] = useState("All");
   const [catFilter, setCatFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState("requests");
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const res = await API.get("/auth/users");
+        setUsers(res.data);
+      } catch (err) {
+        console.log("Could not load users:", err.message);
+      }
+    };
+    loadUsers();
+  }, []);
+
   const statuses = ["All", "Pending", "In Progress", "Completed"];
   const shown = requests.filter(r => {
     const matchStat = filter === "All" || r.status === filter;
     const matchCat = catFilter === "all" || r.category === catFilter;
     return matchStat && matchCat;
   });
+
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 20px 60px" }}>
+
+      {/* TITLE */}
       <div style={{ marginBottom: 28 }}>
         <h1 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: "clamp(20px,4vw,28px)", fontWeight: 900, color: "#111827", margin: "0 0 4px" }}>Admin Dashboard</h1>
         <p style={{ color: "#6b7280", margin: 0, fontSize: 14 }}>Manage all service requests from students.</p>
       </div>
-      {/* Summary */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 14, marginBottom: 24 }}>
-        {[{ label: "Total", val: requests.length, color: "#111827", bg: "#f9fafb" },
-          { label: "Pending", val: requests.filter(r => r.status === "Pending").length, color: "#92400e", bg: "#fef3c7" },
-          { label: "In Progress", val: requests.filter(r => r.status === "In Progress").length, color: "#1e40af", bg: "#dbeafe" },
-          { label: "Completed", val: requests.filter(r => r.status === "Completed").length, color: "#166534", bg: "#dcfce7" }].map(s => (
-          <div key={s.label} style={{ background: s.bg, borderRadius: 12, padding: "16px 18px" }}>
-            <div style={{ fontSize: 28, fontWeight: 900, fontFamily: "'Plus Jakarta Sans',sans-serif", color: s.color }}>{s.val}</div>
-            <div style={{ fontSize: 13, color: "#6b7280" }}>{s.label}</div>
+
+      {/* TAB BUTTONS */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+        <button
+          onClick={() => setActiveTab("requests")}
+          style={{ background: activeTab === "requests" ? "#16a34a" : "#f3f4f6", color: activeTab === "requests" ? "#fff" : "#374151", border: "none", borderRadius: 9, padding: "10px 20px", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}
+        >
+          📋 Requests ({requests.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("users")}
+          style={{ background: activeTab === "users" ? "#16a34a" : "#f3f4f6", color: activeTab === "users" ? "#fff" : "#374151", border: "none", borderRadius: 9, padding: "10px 20px", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}
+        >
+          👥 Users ({users.length})
+        </button>
+      </div>
+
+      {/* REQUESTS TAB */}
+      {activeTab === "requests" ? (
+        <div>
+          {/* SUMMARY CARDS */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 14, marginBottom: 24 }}>
+            {[
+              { label: "Total", val: requests.length, color: "#111827", bg: "#f9fafb" },
+              { label: "Pending", val: requests.filter(r => r.status === "Pending").length, color: "#92400e", bg: "#fef3c7" },
+              { label: "In Progress", val: requests.filter(r => r.status === "In Progress").length, color: "#1e40af", bg: "#dbeafe" },
+              { label: "Completed", val: requests.filter(r => r.status === "Completed").length, color: "#166534", bg: "#dcfce7" },
+            ].map(s => (
+              <div key={s.label} style={{ background: s.bg, borderRadius: 12, padding: "16px 18px" }}>
+                <div style={{ fontSize: 28, fontWeight: 900, fontFamily: "'Plus Jakarta Sans',sans-serif", color: s.color }}>{s.val}</div>
+                <div style={{ fontSize: 13, color: "#6b7280" }}>{s.label}</div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-      {/* Filters */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
-        {statuses.map(s => (
-          <button key={s} onClick={() => setFilter(s)}
-            style={{ background: filter === s ? "#111827" : "#f3f4f6", color: filter === s ? "#fff" : "#374151", border: "none", borderRadius: 8, padding: "7px 14px", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
-            {s}
-          </button>
-        ))}
-        <select value={catFilter} onChange={e => setCatFilter(e.target.value)}
-          style={{ padding: "7px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 13, fontFamily: "inherit", cursor: "pointer", background: "#f3f4f6" }}>
-          <option value="all">All Categories</option>
-          {Object.entries(SERVICES).map(([id, { label }]) => <option key={id} value={id}>{label}</option>)}
-        </select>
-      </div>
-      {/* Table / Cards */}
-      {shown.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "60px 20px", color: "#9ca3af" }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
-          <p>No requests found.</p>
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {shown.map((r, i) => (
-            <div key={i} style={{ background: "#fff", borderRadius: 14, padding: "18px 20px", border: "1px solid #e5e7eb" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 10 }}>
-                <div>
-                  <div style={{ fontWeight: 700, color: "#111827", fontSize: 15 }}>{r.service}</div>
-                  <div style={{ fontSize: 13, color: "#6b7280", marginTop: 2 }}>{r.name} · {r.phone} {r.email ? "· " + r.email : ""}</div>
-                  {r.details && <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 4 }}>{r.details}</div>}
-                  <div style={{ fontSize: 12, color: "#d1d5db", marginTop: 4 }}>
-                    {r.createdAt || r.date
-                      ? new Date(r.createdAt || r.date).toLocaleString("en-NG")
-                      : "Date unavailable"}
+
+          {/* FILTERS */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
+            {statuses.map(s => (
+              <button
+                key={s}
+                onClick={() => setFilter(s)}
+                style={{ background: filter === s ? "#111827" : "#f3f4f6", color: filter === s ? "#fff" : "#374151", border: "none", borderRadius: 8, padding: "7px 14px", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
+              >
+                {s}
+              </button>
+            ))}
+            <select
+              value={catFilter}
+              onChange={e => setCatFilter(e.target.value)}
+              style={{ padding: "7px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 13, fontFamily: "inherit", cursor: "pointer", background: "#f3f4f6" }}
+            >
+              <option value="all">All Categories</option>
+              {Object.entries(SERVICES).map(([id, { label }]) => (
+                <option key={id} value={id}>{label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* REQUESTS LIST */}
+          {shown.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "60px 20px", color: "#9ca3af" }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
+              <p>No requests found.</p>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {shown.map((r, i) => (
+                <div key={i} style={{ background: "#fff", borderRadius: 14, padding: "18px 20px", border: "1px solid #e5e7eb" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 10 }}>
+                    <div>
+                      <div style={{ fontWeight: 700, color: "#111827", fontSize: 15 }}>{r.service}</div>
+                      <div style={{ fontSize: 13, color: "#6b7280", marginTop: 2 }}>{r.name} · {r.phone} {r.email ? "· " + r.email : ""}</div>
+                      {r.details && <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 4 }}>{r.details}</div>}
+                      <div style={{ fontSize: 12, color: "#d1d5db", marginTop: 4 }}>
+                        {r.createdAt || r.date
+                          ? new Date(r.createdAt || r.date).toLocaleString("en-NG")
+                          : "Date unavailable"}
+                      </div>
+                    </div>
+                    <Badge status={r.status} />
+                  </div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                    {["Pending", "In Progress", "Completed"].map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => onUpdateStatus(i, s)}
+                        disabled={r.status === s}
+                        style={{ background: r.status === s ? "#f3f4f6" : "#fff", color: r.status === s ? "#9ca3af" : "#374151", border: "1.5px solid #e5e7eb", borderRadius: 7, padding: "5px 12px", fontSize: 12, fontWeight: 600, cursor: r.status === s ? "default" : "pointer", fontFamily: "inherit" }}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                    
+                      href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hello%20${encodeURIComponent(r.name)}%2C%20regarding%20your%20${encodeURIComponent(r.service)}%20request.`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ background: "#25d366", color: "#fff", border: "none", borderRadius: 7, padding: "5px 12px", fontSize: 12, fontWeight: 600, textDecoration: "none", display: "flex", alignItems: "center", gap: 5 }}
+                    <a href="">
+                      <Icon name="whatsapp" size={13} /> Reply
+                    </a>
+                    <button
+                      onClick={() => onDelete(i)}
+                      style={{ background: "#fef2f2", color: "#dc2626", border: "1.5px solid #fecaca", borderRadius: 7, padding: "5px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontFamily: "inherit" }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = "#fee2e2"}
+                      onMouseLeave={(e) => e.currentTarget.style.background = "#fef2f2"}
+                    >
+                      <Icon name="trash" size={13} /> Delete
+                    </button>
                   </div>
                 </div>
-                <Badge status={r.status} />
-              </div>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-  {["Pending", "In Progress", "Completed"].map((s) => (
-    <button
-      key={s}
-      onClick={() => onUpdateStatus(i, s)}
-      disabled={r.status === s}
-      style={{ background: r.status === s ? "#f3f4f6" : "#fff", color: r.status === s ? "#9ca3af" : "#374151", border: "1.5px solid #e5e7eb", borderRadius: 7, padding: "5px 12px", fontSize: 12, fontWeight: 600, cursor: r.status === s ? "default" : "pointer", fontFamily: "inherit" }}
-    >
-      {s}
-    </button>
-  ))}
-    <a 
-    href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hello%20${encodeURIComponent(r.name)}%2C%20regarding%20your%20${encodeURIComponent(r.service)}%20request.`}
-    target="_blank"
-    rel="noreferrer"
-    style={{ background: "#25d366", color: "#fff", border: "none", borderRadius: 7, padding: "5px 12px", fontSize: 12, fontWeight: 600, textDecoration: "none", display: "flex", alignItems: "center", gap: 5 }}
-  >
-    <Icon name="whatsapp" size={13} /> Reply
-  </a>
-  <button
-    onClick={() => onDelete(i)}
-    style={{ background: "#fef2f2", color: "#dc2626", border: "1.5px solid #fecaca", borderRadius: 7, padding: "5px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontFamily: "inherit" }}
-    onMouseEnter={(e) => e.currentTarget.style.background = "#fee2e2"}
-    onMouseLeave={(e) => e.currentTarget.style.background = "#fef2f2"}
-  >
-    <Icon name="trash" size={13} /> Delete
-  </button>
-</div>
+              ))}
             </div>
-          ))}
+          )}
+        </div>
+
+      ) : (
+
+        // USERS TAB
+        <div>
+          <h2 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 20, fontWeight: 800, color: "#111827", marginBottom: 16 }}>
+            Registered Users
+          </h2>
+          {users.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "60px 20px", color: "#9ca3af" }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>👥</div>
+              <p>No users registered yet.</p>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {users.map((u, i) => (
+                <div key={i} style={{ background: "#fff", borderRadius: 14, padding: "16px 20px", border: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+                  <div>
+                    <div style={{ fontWeight: 700, color: "#111827", fontSize: 15 }}>{u.name}</div>
+                    <div style={{ fontSize: 13, color: "#6b7280", marginTop: 2 }}>{u.email}</div>
+                    <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>
+                      Joined: {new Date(u.createdAt).toLocaleDateString("en-NG", { dateStyle: "medium" })}
+                    </div>
+                  </div>
+                  <span style={{ background: u.role === "admin" ? "#dbeafe" : "#f0fdf4", color: u.role === "admin" ? "#1e40af" : "#16a34a", borderRadius: 999, padding: "3px 12px", fontSize: 12, fontWeight: 700 }}>
+                    {u.role === "admin" ? "Admin" : "User"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
+
     </div>
   );
 };
